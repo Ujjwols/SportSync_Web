@@ -4,6 +4,8 @@ import bcrypt from "bcryptjs";
 import generateTokenAndSetCookie from "../utils/helpers/generateTokenAndSetCookie.js";
 import { v2 as cloudinary } from "cloudinary";
 import mongoose from "mongoose";
+import { saveCloudinaryImage } from "../utils/downloadImage.js";
+
 
 const getUserProfile = async (req, res) => {
 	// We will fetch user profile either with username or userId
@@ -163,6 +165,9 @@ const updateUser = async (req, res) => {
 
 			const uploadedResponse = await cloudinary.uploader.upload(profilePic);
 			profilePic = uploadedResponse.secure_url;
+
+			await saveCloudinaryImage(profilePic, `profilePic_${user._id}_${Date.now()}.jpg`)
+
 		}
 
 		user.name = name || user.name;

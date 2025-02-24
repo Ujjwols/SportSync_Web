@@ -1,6 +1,8 @@
 import MatchmakingPost from "../models/matchModel.js";
 import User from "../models/userModel.js";
 import { v2 as cloudinary } from "cloudinary";
+import { saveCloudinaryImage } from "../utils/downloadImage.js";
+
 
 const createMatchmakingPost = async (req, res) => {
 	try {
@@ -28,6 +30,8 @@ const createMatchmakingPost = async (req, res) => {
 		if (img) {
 			const uploadedResponse = await cloudinary.uploader.upload(img);
 			img = uploadedResponse.secure_url;
+
+			await saveCloudinaryImage(img, `matchpost_${Date.now()}.jpg`);
 		}
 
 		const newMatchmakingPost = new MatchmakingPost({
