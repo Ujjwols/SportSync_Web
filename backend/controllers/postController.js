@@ -1,6 +1,7 @@
 import Post from "../models/postModel.js";
 import User from "../models/userModel.js";
 import { v2 as cloudinary } from "cloudinary";
+import { saveCloudinaryImage } from "../utils/downloadImage.js";
 
 const createPost = async (req, res) => {
 	try {
@@ -28,6 +29,8 @@ const createPost = async (req, res) => {
 		if (img) {
 			const uploadedResponse = await cloudinary.uploader.upload(img);
 			img = uploadedResponse.secure_url;
+
+			await saveCloudinaryImage(img, `post_${Date.now()}.jpg`);
 		}
 
 		const newPost = new Post({ postedBy, text, img });
