@@ -3,9 +3,11 @@ import Notification from "../models/notificationModel.js";
 export const getNotifications = async (req, res) => {
 	try {
 		const userId = req.user?._id; // Ensure user is authenticated
+		
 		if (!userId) {
 			return res.status(401).json({ error: "Unauthorized access" });
 		}
+		
 
 		const notifications = await Notification.find({ to: userId })
 			.populate("from", "username profilePic")

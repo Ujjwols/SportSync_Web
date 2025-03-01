@@ -1,5 +1,6 @@
 import Post from "../models/postModel.js";
 import User from "../models/userModel.js";
+import Notification from "../models/notificationModel.js"; 
 import { v2 as cloudinary } from "cloudinary";
 import { saveCloudinaryImage } from "../utils/downloadImage.js";
 
@@ -83,60 +84,84 @@ const deletePost = async (req, res) => {
 
 const likeUnlikePost = async (req, res) => {
 	try {
-		const { id: postId } = req.params;
-		const userId = req.user._id;
-
-		const post = await Post.findById(postId);
-
-		if (!post) {
-			return res.status(404).json({ error: "Post not found" });
-		}
-
-		const userLikedPost = post.likes.includes(userId);
-
-		if (userLikedPost) {
-			// Unlike post
-			await Post.updateOne({ _id: postId }, { $pull: { likes: userId } });
-			res.status(200).json({ message: "Post unliked successfully" });
-		} else {
-			// Like post
-			post.likes.push(userId);
-			await post.save();
-			res.status(200).json({ message: "Post liked successfully" });
-		}
-	} catch (err) {
-		res.status(500).json({ error: err.message });
-	}
-};
-
-const replyToPost = async (req, res) => {
-	try {
-		const { text } = req.body;
-		const postId = req.params.id;
-		const userId = req.user._id;
-		const userProfilePic = req.user.profilePic;
-		const username = req.user.username;
-
-		if (!text) {
-			return res.status(400).json({ error: "Text field is required" });
-		}
-
-		const post = await Post.findById(postId);
-		if (!post) {
-			return res.status(404).json({ error: "Post not found" });
-		}
-
-		const reply = { userId, text, userProfilePic, username };
-
-		post.replies.push(reply);
+	  const { id: postId } = req.params;
+	  const userId = req.user._id;
+  
+	  const post = await Post.findById(postId);
+  
+	  if (!post) {
+		return res.status(404).json({ error: "Post not found" });
+	  }
+  
+	  const userLikedPost = post.likes.includes(userId);
+  
+	  if (userLikedPost) {
+		// Unlike post
+		await Post.updateOne({ _id: postId }, { $pull: { likes: userId } });
+		res.status(200).json({ message: "Post unliked successfully" });
+	  } else {
+		// Like post
+		post.likes.push(userId);
 		await post.save();
-
-		res.status(200).json(reply);
+  
+		// Create a notification for the post owner (if the liker is not the post owner)
+		if (post.postedBy.toString() !== userId.toString()) {
+		  const notification = new Notification({
+			from: userId, // The user who liked the post
+			to: post.postedBy, // The post owner
+			type: "likes", // Notification type
+		  });
+		  await notification.save();
+		}
+  
+		res.status(200).json({ message: "Post liked successfully" });
+	  }
 	} catch (err) {
-		res.status(500).json({ error: err.message });
+	  console.error("Error in likeUnlikePost:", err); // Log the full error
+	  res.status(500).json({ error: err.message });
 	}
-};
+  };
 
+  const replyToPost = async (req, res) => {
+	try {
+	  const { text } = req.body; // Reply text
+	  const postId = req.params.id; // ID of the post being replied to
+	  const userId = req.user._id; // ID of the authenticated user
+	  const userProfilePic = req.user.profilePic; // Profile picture of the user
+	  const username = req.user.username; // Username of the user
+  
+	  if (!text) {
+		return res.status(400).json({ error: "Text field is required" });
+	  }
+  
+	  const post = await Post.findById(postId);
+	  if (!post) {
+		return res.status(404).json({ error: "Post not found" });
+	  }
+  
+	  // Create the reply object
+	  const reply = { userId, text, userProfilePic, username };
+  
+	  // Add the reply to the post
+	  post.replies.push(reply);
+	  await post.save();
+  
+	  // Create a notification for the post owner (if the replier is not the post owner)
+	  if (post.postedBy.toString() !== userId.toString()) {
+		const notification = new Notification({
+		  from: userId, // The user who replied
+		  to: post.postedBy, // The post owner
+		  type: "reply", // Notification type
+		});
+		await notification.save();
+	  }
+  
+	  res.status(200).json(reply);
+	} catch (err) {
+	  console.error("Error in replyToPost:", err); // Log the error for debugging
+	  res.status(500).json({ error: err.message });
+	}
+  };
 const getFeedPosts = async (req, res) => {
 	try {
 		const userId = req.user._id;

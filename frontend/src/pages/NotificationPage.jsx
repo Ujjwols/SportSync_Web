@@ -1,8 +1,8 @@
-import { Box, Text, Flex, Spinner, Avatar, Stack } from "@chakra-ui/react";
+import { Box, Text, Flex, Spinner, Avatar, Stack, Icon } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import useShowToast from "../hooks/useShowToast";
-import { FaUser, FaHeart } from "react-icons/fa6";
+import { FaHeart, FaComment } from "react-icons/fa6";
 import { IoSettingsOutline } from "react-icons/io5";
 import { IconButton, Menu, MenuButton, MenuItem, MenuList } from "@chakra-ui/react";
 
@@ -50,7 +50,7 @@ const NotificationPage = () => {
       <Flex justify="space-between" align="center" borderBottom="1px" borderColor="gray.700" pb={4}>
         <Text fontWeight="bold" fontSize="xl">Notifications</Text>
         <Menu>
-          <MenuButton as={IconButton} icon={<IoSettingsOutline />} variant="ghost" />
+          <MenuButton as={IconButton} icon={<IoSettingsOutline />} variant="ghost" aria-label="Settings" />
           <MenuList>
             <MenuItem onClick={handleDeleteNotifications}>Delete all notifications</MenuItem>
           </MenuList>
@@ -81,10 +81,9 @@ const NotificationPage = () => {
         <Box key={notification._id} borderBottom="1px" borderColor="gray.700" py={4}>
           <Flex gap={4} align="center">
             {/* Notification Icon */}
-            {notification.type === "follow" && <FaUser color="blue.500" size={28} />}
-            {notification.type === "like" && <FaHeart color="red.500" size={28} />}
-
-            {/* Notification Content */}
+            {notification.type === "like" && <Icon as={FaHeart} color="red.500" boxSize={6} />}
+            {notification.type === "reply" && <Icon as={FaComment} color="green.500" boxSize={6} />}
+            
             <Link to={`/profile/${notification.from.username}`}>
               <Flex align="center" gap={3}>
                 {/* Profile Image */}
@@ -96,7 +95,13 @@ const NotificationPage = () => {
                 {/* Text */}
                 <Stack spacing={0}>
                   <Text fontWeight="bold">@{notification.from.username}</Text>
-                  <Text>{notification.type === "follow" ? "followed you" : "liked your post"}</Text>
+                  <Text>
+                    {notification.type === "likes"
+                      ? "liked your post"
+                      : notification.type === "reply"
+                      ? "replied to your post"
+                      : "interacted with your post"}
+                  </Text>
                 </Stack>
               </Flex>
             </Link>

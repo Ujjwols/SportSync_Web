@@ -51,6 +51,8 @@ const signupUser = async (req, res) => {
 		});
 		await newUser.save();
 
+		console.log("User created:", newUser);
+
 		if (newUser) {
 			generateTokenAndSetCookie(newUser._id, res);
 
@@ -74,18 +76,33 @@ const signupUser = async (req, res) => {
 const loginUser = async (req, res) => {
 	try {
 		const { username, password } = req.body;
+
+		// Check if user exists
 		const user = await User.findOne({ username });
-		const isPasswordCorrect = await bcrypt.compare(password, user?.password || "");
 
-		if (!user || !isPasswordCorrect) return res.status(400).json({ error: "Invalid username or password" });
+		if (!user) {
+			return res.status(400).json({ error: "Invalid username " });
+		}
 
+		// Check if password is correct
+		
+
+		const isPasswordCorrect = await bcrypt.compare(password, user.password);
+	
+		if (!isPasswordCorrect) {
+			return res.status(400).json({ error: "Invalid  password" });
+		}
+
+		// Check if user is frozen, and unfreeze if necessary
 		if (user.isFrozen) {
 			user.isFrozen = false;
 			await user.save();
 		}
 
+		// Generate token and set cookie
 		generateTokenAndSetCookie(user._id, res);
 
+		// Return user data (excluding password)
 		res.status(200).json({
 			_id: user._id,
 			name: user.name,
@@ -99,6 +116,7 @@ const loginUser = async (req, res) => {
 		console.log("Error in loginUser: ", error.message);
 	}
 };
+
 
 const logoutUser = (req, res) => {
 	try {
