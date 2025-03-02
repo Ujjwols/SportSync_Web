@@ -87,7 +87,7 @@ export default function UpdateProfilePage() {
 						</Stack>
 					</FormControl>
 					<FormControl>
-						<FormLabel>Full name</FormLabel>
+						<FormLabel>Teamname</FormLabel>
 						<Input
 							placeholder='John Doe'
 							value={inputs.name}

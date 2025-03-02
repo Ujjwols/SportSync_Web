@@ -70,7 +70,7 @@ export default function SignupCard() {
 						<HStack>
 							<Box>
 								<FormControl isRequired>
-									<FormLabel>Full Teamname</FormLabel>
+									<FormLabel>Teamname</FormLabel>
 									<Input
 										type='text'
 										onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
